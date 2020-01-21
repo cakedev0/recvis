@@ -91,9 +91,19 @@ class MatrixDeterminantDataset:
     def _repr_html_(self):
         name = "MatrixDeterminantDataset for matrices of form : <br>"
         symbols = ["0"] + self.alphabet
-        matrix = [ [("" if self.matrix_structure[i, j] >= 0 else "-") +symbols[np.abs(self.matrix_structure[i, j])]\
-                    for j in range(self.matrix_structure.shape[1])] \
-                  for i in range(self.matrix_structure.shape[0])]
+        ms = self.matrix_structure
+        matrix = [ [("" if ms[i, j] >= 0 else "-") +symbols[np.abs(ms[i, j])]\
+                    for j in range(ms.shape[1])] \
+                  for i in range(ms.shape[0])]
         matrix = [" & ".join(line) for line in matrix]
         matrix = " \\\\ ".join(matrix)
-        return name + "$ \\begin{pmatrix} " + matrix + " \\end{pmatrix}$ "
+        matrix = "$ \\begin{pmatrix} " + matrix + " \\end{pmatrix}$ "
+        out_form = "<br>Network input is "
+        if(self.matrix_form):
+            out_form += "as above (matrix form)."
+        elif(self.with_multiplicity):
+            elts = [self.alphabet[i] for i in (np.abs(ms[ms != 0]) - 1)]
+            out_form += ": $ \\left(" + " \; ".join(elts) + "\\right)$ "
+        else:
+            out_form += ": $ \\left(" + " \; ".join(self.alphabet) + "\\right)$ "
+        return name + matrix + out_form

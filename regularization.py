@@ -10,21 +10,34 @@ class Regularizer(ABC):
 
 class RegularizedParameter(nn.Parameter):
     
-    def __init__(self, regularizers={}, data=None, requires_grad=True):
-        self.regularizers = regularizers
+    def __init__(self, data=None, requires_grad=True, reg=None):
+        self.regularizer = reg
     
-    def __new__(cls, reg_func, data=None, requires_grad=True):
+    def __new__(cls, data=None, requires_grad=True, reg=None):
         return super(RegularizedParameter, cls).__new__(cls, data=data, requires_grad=requires_grad)
     
     def __repr__(self):
         return 'Regularized ' + super(RegularizedParameter, self).__repr__() + \
-            '\n Regularizers: ' + str(list(self.regularizers.keys()))
+            '\n' + self._reg_repr()
+    
+    def _reg_repr(self):
+        if(self.regularizer is None):
+            return 'No regularizers'
+        elif(type(self.regularizer) is dict):
+            return 'Regularizers: ' + str(list(self.regularizer.keys()))
+        else:
+            return 'Regularizer: ' + self.regularizer.__code__.co_name
 
-    def eval_regularizers(self):
-        regs = {}
-        for reg_name in self.regularizers:
-            regs[reg_name] = self.regularizers[reg_name](self)
-        return regs
+    def eval_regularizer(self):
+        if(self.regularizer is None):
+            return 0
+        elif(type(self.regularizer) is dict):
+            regs = {}
+            for reg_name in self.regularizer:
+                regs[reg_name] = self.regularizer[reg_name](self)
+            return regs
+        else:
+            return self.regularizer(self)
     
 class NAU_Regularizer(Regularizer):
     
@@ -81,7 +94,7 @@ def eval_regularizers(model, multipliers=None):
     regs = {}
     for param in model.parameters():
         if(type(param) is RegularizedParameter):
-            params_regs = param.eval_regularizers()
+            params_regs = param.eval_regularizer()
             for reg_name in params_regs:
                 regs.setdefault(reg_name, 0)
                 regs[reg_name] += params_regs[reg_name]

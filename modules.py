@@ -5,15 +5,13 @@ import regularization as R
 
 class NMU(nn.Module):
     
-    def __init__(self, n_in, n_out, squared=True, n_coeffs=None, coeffs_slack=0, extra_regs={}):
+    def __init__(self, n_in, n_out, squared=True, extra_regs={}):
         super().__init__()
         self.n_in = n_in
         self.n_out = n_out
         regs = dict(sparsity=R.NMU_Regularizer(squared))
-        if(n_coeffs is not None):
-            regs['n_coeffs'] = R.NumberActiveCoeffs(n_coeffs, slack=coeffs_slack)
         regs = {**regs, **extra_regs}
-        self.W = R.RegularizedParameter(regs, torch.Tensor(n_out, n_in))
+        self.W = R.RegularizedParameter(torch.Tensor(n_out, n_in), reg=regs)
         self.reset_parameters()
         
     def reset_parameters(self):
@@ -47,15 +45,13 @@ class NMU(nn.Module):
         
 class NAU(nn.Module):
     
-    def __init__(self, n_in, n_out, squared=True, n_coeffs=None, coeffs_slack=0, extra_regs={}):
+    def __init__(self, n_in, n_out, squared=True, extra_regs={}):
         super().__init__()
         self.n_in = n_in
         self.n_out = n_out
         regs = dict(sparsity=R.NAU_Regularizer(squared))
-        if(n_coeffs is not None):
-            regs['n_coeffs'] = R.NumberActiveCoeffs(n_coeffs, slack=coeffs_slack)
         regs = {**regs, **extra_regs}
-        self.W = R.RegularizedParameter(regs, torch.Tensor(n_out, n_in))
+        self.W = R.RegularizedParameter(torch.Tensor(n_out, n_in), reg=regs)
         self.reset_parameters()
         
     def reset_parameters(self):
